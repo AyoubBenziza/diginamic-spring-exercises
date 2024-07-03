@@ -3,25 +3,37 @@ package fr.diginamic.springdemo.services;
 import fr.diginamic.springdemo.entities.City;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class CityService {
 
-    private final Set<City> cities = new HashSet<>(
-            Set.of(
-                    new City("Paris", 2_148_000),
-                    new City("Lyon", 516_092),
-                    new City("Marseille", 861_635)
+    private final Map<Integer,City> cities = new HashMap<>(
+            Map.of(
+                    1, new City("Paris", 2_140_526),
+                    2, new City("Marseille", 870_018),
+                    3, new City("Lyon", 515_695),
+                    4, new City("Toulouse", 479_553),
+                    5, new City("Nice", 342_522)
             )
     );
 
-    public Set<City> getAll() {
+    public Map<Integer,City> getAll() {
         return cities;
     }
 
-    public void add(City city) {
-        cities.add(city);
+    public void add(City... citiesToAdd) {
+        for (City city : citiesToAdd) {
+            cities.put(cities.size() + 1, city);
+        }
+    }
+
+    public void update(int id, City city) {
+        cities.put(id, city);
+    }
+
+    public void delete(int id) {
+        cities.remove(id);
     }
 }
