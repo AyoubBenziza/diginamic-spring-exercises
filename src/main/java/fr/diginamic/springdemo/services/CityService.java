@@ -17,7 +17,11 @@ public class CityService {
             )
     );
 
-    public Set<City> getCities() {
+    public Set<City> getAll() {
         return cities;
+    }
+
+    public void add(City city) {
+        cities.add(city);
     }
 }
