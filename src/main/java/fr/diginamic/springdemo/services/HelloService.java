@@ -1,4 +1,4 @@
-package fr.diginamic.springdemo.beans;
+package fr.diginamic.springdemo.services;
 
 import org.springframework.stereotype.Service;
 
