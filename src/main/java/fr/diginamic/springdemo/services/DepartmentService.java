@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -26,78 +25,82 @@ public class DepartmentService {
                 .collect(Collectors.toSet());
     }
 
-    public DepartmentDTO extractDepartment(int id) {
-        return convertToDTO(departmentRepository.findById(id).orElse(null));
+    public DepartmentDTO extractDepartment(String code) {
+        return convertToDTO(departmentRepository.findByCode(code));
     }
 
-    public Department getDepartment(int id) {
-        return departmentRepository.findById(id).orElse(null);
+    public Department getDepartment(String code) {
+        return departmentRepository.findByCode(code);
     }
 
     public DepartmentDTO extractDepartmentByName(String name) {
         return convertToDTO(departmentRepository.findByName(name));
     }
 
-    public Set<DepartmentDTO> insertDepartments(Department... departmentsToAdd) {
-        departmentRepository.saveAll(Arrays.asList(departmentsToAdd));
-        return Arrays.stream(departmentsToAdd)
+    public Set<DepartmentDTO> extractDepartmentsByName(String name) {
+        return departmentRepository.findByNameStartingWith(name).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toSet());
     }
 
-    public Set<CityDTO> findTopNCitiesInDepartment(int departmentId, int n) {
-        Department department = departmentRepository.findById(departmentId).orElse(null);
-        if (department != null) {
-            return department.getCities().stream()
-                    .sorted((c1, c2) -> c2.getPopulation() - c1.getPopulation())
-                    .limit(n)
-                    .map(city -> new CityDTO(city.getName(), city.getPopulation()))
-                    .collect(Collectors.toSet());
-        }
-        return new HashSet<>();
+    public Set<CityDTO> extractCities(String id) {
+        return departmentRepository.findCities(id).stream()
+                .map(city -> new CityDTO(city.getName(), city.getPopulation(), city.getDepartment().getCode()))
+                .collect(Collectors.toSet());
     }
 
-    public Set<CityDTO> findCitiesWithPopulationBetween(int departmentId, int minPopulation, int maxPopulation) {
-        DepartmentDTO departmentDTO = extractDepartment(departmentId);
-        if (departmentDTO != null) {
-            return departmentDTO.getCities().stream()
-                    .filter(cityDTO -> cityDTO.getPopulation() >= minPopulation && cityDTO.getPopulation() <= maxPopulation)
-                    .collect(Collectors.toSet());
-        }
-        return new HashSet<>();
+    public void insertDepartments(Department... departmentsToAdd) {
+        departmentRepository.saveAll(Arrays.asList(departmentsToAdd));
+    }
+
+    public Set<CityDTO> findTopNCitiesInDepartment(String departmentId, int n) {
+        Set<City> cities = departmentRepository.findTopNCities(departmentId, n);
+        return cities.stream()
+                .map(city -> new CityDTO(city.getName(), city.getPopulation(), city.getDepartment().getCode()))
+                .collect(Collectors.toSet());
+    }
+
+    public Set<CityDTO> findCitiesWithPopulationBetween(String departmentId, int minPopulation, int maxPopulation) {
+        Set<City> cities = departmentRepository.findCitiesByPopulationRange(departmentId, minPopulation, maxPopulation);
+        return cities.stream()
+                .map(city -> new CityDTO(city.getName(), city.getPopulation(), city.getDepartment().getCode()))
+                .collect(Collectors.toSet());
     }
 
     @Transactional
-    public DepartmentDTO addCities(int id, Set<City> cities) {
-        Department department = departmentRepository.findById(id).orElse(null);
+    public DepartmentDTO addCities(String code, Set<City> cities) {
+        Department department = departmentRepository.findByCode(code);
         if (department != null) {
-            for (City city : cities) {
-                city.setDepartment(department); // Assuming there's a method to set the department in City
-                department.addCity(city);
-            }
-            departmentRepository.save(department); // This ensures changes are persisted
+            cities.forEach(city -> {
+                city.setDepartment(department);
+                department.getCities().add(city);
+            });
+            departmentRepository.save(department);
             return convertToDTO(department);
         }
         return null;
     }
 
-    public void update(int id, Department department) {
-        Department departmentToUpdate = departmentRepository.findById(id).orElse(null);
+    public void update(String code, Department department) {
+        Department departmentToUpdate = departmentRepository.findByCode(code);
         if (departmentToUpdate != null) {
             departmentToUpdate.setName(department.getName());
             departmentRepository.save(departmentToUpdate);
         }
     }
 
-    public void delete(int id) {
-        departmentRepository.findById(id).ifPresent(department -> departmentRepository.delete(department));
+    public void delete(String code) {
+        Department department = departmentRepository.findByCode(code);
+        if (department != null) {
+            departmentRepository.delete(department);
+        }
     }
 
     public DepartmentDTO convertToDTO(Department department) {
         if (department != null) {
             DepartmentDTO departmentDTO = new DepartmentDTO(department.getName());
             Set<CityDTO> cityDTOs = department.getCities().stream()
-                    .map(city -> new CityDTO(city.getName(), city.getPopulation()))
+                    .map(city -> new CityDTO(city.getName(), city.getPopulation(), city.getDepartment().getCode()))
                     .collect(Collectors.toSet());
             departmentDTO.setCities(cityDTOs);
             return departmentDTO;

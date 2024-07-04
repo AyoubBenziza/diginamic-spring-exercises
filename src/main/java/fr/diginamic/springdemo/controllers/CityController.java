@@ -3,7 +3,11 @@ package fr.diginamic.springdemo.controllers;
 import fr.diginamic.springdemo.entities.City;
 import fr.diginamic.springdemo.entities.dtos.CityDTO;
 import fr.diginamic.springdemo.services.CityService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Set;
@@ -30,14 +34,27 @@ public class CityController {
         return cityService.extractCityByName(name);
     }
 
+    @GetMapping("/search/starting")
+    public Set<CityDTO> getCitiesByNameStartingWith(@RequestParam String name) {
+        return cityService.extractCitiesByNameStartingWith(name);
+    }
+
     @PostMapping
-    public Set<CityDTO> addCity(@RequestBody City city) {
-        return cityService.insertCities(city);
+    public ResponseEntity<String> addCity(@Valid @RequestBody City city, BindingResult result){
+        if (result.hasErrors()) {
+            return ResponseEntity.badRequest().body("Invalid city data");
+        }
+        cityService.insertCities(city);
+        return ResponseEntity.ok("City added");
     }
 
     @PutMapping("/{id}")
-    public void updateCity(@PathVariable int id, @RequestBody City city) {
+    public ResponseEntity<String> updateCity(@Valid @PathVariable @Min(0)  int id, @Valid @RequestBody City city, BindingResult result){
+        if (result.hasErrors()) {
+            return ResponseEntity.badRequest().body("Invalid city data");
+        }
         cityService.update(id, city);
+        return ResponseEntity.ok("City updated");
     }
 
     @DeleteMapping("/{id}")

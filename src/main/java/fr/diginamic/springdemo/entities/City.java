@@ -1,9 +1,11 @@
 package fr.diginamic.springdemo.entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 @Entity
-@Inheritance(strategy = InheritanceType.JOINED)
 @Table(name = "cities")
 public class City {
     @Id
@@ -11,12 +13,17 @@ public class City {
     private int id;
 
     @Column
+    @NotNull
+    @Size(min = 2, message = "The name must be at least 2 characters long")
     private String name;
 
     @Column
+    @NotNull
+    @Min(1)
     private int population;
 
     @ManyToOne
+    @JoinColumn(name = "department_code")
     private Department department;
 
     public City(String name, int population) {
@@ -54,5 +61,13 @@ public class City {
 
     public void setDepartment(Department department) {
         this.department = department;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof City city) {
+            return city.getId() == this.getId();
+        }
+        return false;
     }
 }

@@ -1,17 +1,19 @@
 package fr.diginamic.springdemo.entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Inheritance(strategy = InheritanceType.JOINED)
 @Table(name = "department")
 public class Department {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    @NotNull
+    @Size(min = 2, max = 5)
+    private String code;
 
     @Column
     private String name;
@@ -26,8 +28,8 @@ public class Department {
     public Department() {
     }
 
-    public int getId() {
-        return id;
+    public String getCode() {
+        return code;
     }
 
     public String getName() {
@@ -52,5 +54,13 @@ public class Department {
 
     public void removeCity(City city) {
         cities.remove(city);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Department department = (Department) obj;
+        return code.equals(department.code);
     }
 }

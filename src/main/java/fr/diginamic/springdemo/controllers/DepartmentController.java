@@ -5,7 +5,10 @@ import fr.diginamic.springdemo.entities.Department;
 import fr.diginamic.springdemo.entities.dtos.CityDTO;
 import fr.diginamic.springdemo.entities.dtos.DepartmentDTO;
 import fr.diginamic.springdemo.services.DepartmentService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Set;
@@ -22,44 +25,58 @@ public class DepartmentController {
         return departmentService.extractDepartments();
     }
 
-    @GetMapping("/{id}")
-    public DepartmentDTO getDepartment(@PathVariable int id) {
-        return departmentService.extractDepartment(id);
+    @GetMapping("/{code}")
+    public DepartmentDTO getDepartment(@PathVariable String code) {
+        return departmentService.extractDepartment(code);
     }
 
-    @GetMapping("/search")
+    @GetMapping("/name")
     public DepartmentDTO getDepartmentByName(@RequestParam String name) {
         return departmentService.extractDepartmentByName(name);
     }
 
-    @GetMapping("/{id}/top-cities")
-    public Set<CityDTO> getTopNCitiesInDepartment(@PathVariable int id,@RequestParam int nbCities) {
-        return departmentService.findTopNCitiesInDepartment(id, nbCities);
+    @GetMapping("/searchByName")
+    public Set<DepartmentDTO> getDepartmentsByName(@RequestParam String name) {
+        return departmentService.extractDepartmentsByName(name);
     }
 
-    @GetMapping("/{id}/cities/searchPopulationBetween")
-    public Set<CityDTO> getCitiesInDepartmentWithPopulationBetween(@PathVariable int id, @RequestParam int min, @RequestParam int max) {
-        return departmentService.findCitiesWithPopulationBetween(id, min, max);
+    @GetMapping("/{code}/cities")
+    public Set<CityDTO> getCitiesInDepartment(@PathVariable String code) {
+        return departmentService.extractCities(code);
+    }
+
+    @GetMapping("/{code}/cities/mostPopulated")
+    public Set<CityDTO> getTopNCitiesInDepartment(@PathVariable String code,@RequestParam int nbCities) {
+        return departmentService.findTopNCitiesInDepartment(code, nbCities);
+    }
+
+    @GetMapping("/{code}/cities/searchPopulationBetween")
+    public Set<CityDTO> getCitiesInDepartmentWithPopulationBetween(@PathVariable String code, @RequestParam int min, @RequestParam int max) {
+        return departmentService.findCitiesWithPopulationBetween(code, min, max);
     }
 
     @PostMapping
-    public Set<DepartmentDTO> addDepartment(@RequestBody Department department) {
-        return departmentService.insertDepartments(department);
+    public ResponseEntity<String> addDepartment(@Valid @RequestBody Department department, BindingResult result){
+        if (result.hasErrors()) {
+            return ResponseEntity.badRequest().body("Invalid department data");
+        }
+        departmentService.insertDepartments(department);
+        return ResponseEntity.ok("Department added");
     }
 
-    @PostMapping("/{id}/cities")
-    public DepartmentDTO addCitiesToDepartment(@PathVariable int id, @RequestBody Set<City> cities) {
-        return departmentService.addCities(id, cities);
+    @PostMapping("/{code}/cities")
+    public DepartmentDTO addCitiesToDepartment(@PathVariable String code,@Valid @RequestBody Set<City> cities) {
+        return departmentService.addCities(code, cities);
     }
 
-    @PutMapping("/{id}")
-    public void updateDepartment(@PathVariable int id, @RequestBody Department department) {
-        departmentService.update(id, department);
+    @PutMapping("/{code}")
+    public void updateDepartment(@PathVariable String code, @RequestBody Department department) {
+        departmentService.update(code, department);
     }
 
-    @DeleteMapping("/{id}")
-    public void deleteDepartment(@PathVariable int id) {
-        departmentService.delete(id);
+    @DeleteMapping("/{code}")
+    public void deleteDepartment(@PathVariable String code) {
+        departmentService.delete(code);
     }
 
 }

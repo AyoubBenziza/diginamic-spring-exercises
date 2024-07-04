@@ -1,12 +1,12 @@
 package fr.diginamic.springdemo.services;
 
 import fr.diginamic.springdemo.entities.City;
-import fr.diginamic.springdemo.entities.Department;
 import fr.diginamic.springdemo.entities.dtos.CityDTO;
 import fr.diginamic.springdemo.repositories.CityRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.Set;
 
 @Service
@@ -14,9 +14,6 @@ public class CityService {
 
     @Autowired
     private CityRepository cityRepository;
-
-    @Autowired
-    private DepartmentService departmentService;
 
     public Set<CityDTO> extractCities() {
         return cityRepository.findAll().stream()
@@ -36,17 +33,26 @@ public class CityService {
         return convertToDTO(cityRepository.findByName(name));
     }
 
-    public Set<CityDTO> insertCities(City... citiesToAdd) {
-        for (City city : citiesToAdd) {
-            if (city.getDepartment() != null) {
-                Department department = departmentService.getDepartment(city.getDepartment().getId());
-                if (department != null) {
-                    city.setDepartment(department);
-                }
-            }
-            cityRepository.save(city);
-        }
-        return extractCities();
+    public Set<CityDTO> extractCitiesByNameStartingWith(String name) {
+        return cityRepository.findByNameStartingWith(name).stream()
+                .map(this::convertToDTO)
+                .collect(java.util.stream.Collectors.toSet());
+    }
+
+    public Set<CityDTO> extractCitiesWithPopulationGreaterThan(int population) {
+        return cityRepository.findByPopulationIsGreaterThan(population).stream()
+                .map(this::convertToDTO)
+                .collect(java.util.stream.Collectors.toSet());
+    }
+
+    public Set<CityDTO> extractCitiesWithPopulationBetween(int min, int max) {
+        return cityRepository.findByPopulationBetween(min, max).stream()
+                .map(this::convertToDTO)
+                .collect(java.util.stream.Collectors.toSet());
+    }
+
+    public void insertCities(City... citiesToAdd) {
+        cityRepository.saveAll(Arrays.asList(citiesToAdd));
     }
 
     public void update(int id, City city) {
@@ -68,7 +74,7 @@ public class CityService {
 
     public CityDTO convertToDTO(City city) {
         if (city != null) {
-            return new CityDTO(city.getName(), city.getPopulation());
+            return new CityDTO(city.getName(), city.getPopulation(), city.getDepartment().getCode());
         }
         return null;
     }
