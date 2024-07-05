@@ -16,13 +16,14 @@ public class Department {
     private String code;
 
     @Column
+    @Size(min = 2, max = 100)
     private String name;
 
     @OneToMany(mappedBy = "department",cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private Set<City> cities = new HashSet<>();
 
-    public Department(String name) {
-        this.name = name;
+    public Department(String code) {
+        this.code = code;
     }
 
     public Department() {
@@ -32,12 +33,20 @@ public class Department {
         return code;
     }
 
+    public void setCode(String code) {
+        this.code = code;
+    }
+
     public String getName() {
         return name;
     }
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public int getPopulation() {
+        return cities.stream().mapToInt(City::getPopulation).sum();
     }
 
     public Set<City> getCities() {

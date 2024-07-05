@@ -19,7 +19,7 @@ public class City {
 
     @Column
     @NotNull
-    @Min(1)
+    @Min(value = 1, message = "The population must be a positive number")
     private int population;
 
     @ManyToOne

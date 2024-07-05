@@ -84,7 +84,8 @@ public class DepartmentService {
     public void update(String code, Department department) {
         Department departmentToUpdate = departmentRepository.findByCode(code);
         if (departmentToUpdate != null) {
-            departmentToUpdate.setName(department.getName());
+            departmentToUpdate.setCode(department.getCode());
+            departmentToUpdate.setCities(department.getCities());
             departmentRepository.save(departmentToUpdate);
         }
     }
@@ -98,7 +99,7 @@ public class DepartmentService {
 
     public DepartmentDTO convertToDTO(Department department) {
         if (department != null) {
-            DepartmentDTO departmentDTO = new DepartmentDTO(department.getName());
+            DepartmentDTO departmentDTO = new DepartmentDTO(department.getPopulation());
             Set<CityDTO> cityDTOs = department.getCities().stream()
                     .map(city -> new CityDTO(city.getName(), city.getPopulation(), city.getDepartment().getCode()))
                     .collect(Collectors.toSet());

@@ -3,22 +3,22 @@ package fr.diginamic.springdemo.entities.dtos;
 import java.util.Set;
 
 public class DepartmentDTO {
-    private String name;
+    private int population;
     private Set<CityDTO> cities;
 
-    public DepartmentDTO(String name) {
-        this.name = name;
+    public DepartmentDTO(int population) {
+        this.population = population;
     }
 
     public DepartmentDTO() {
     }
 
-    public String getName() {
-        return name;
+    public int getPopulation() {
+        return population;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setPopulation(int population) {
+        this.population = population;
     }
 
     public Set<CityDTO> getCities() {

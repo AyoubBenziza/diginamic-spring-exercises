@@ -2,10 +2,13 @@ package fr.diginamic.springdemo.controllers;
 
 import fr.diginamic.springdemo.entities.City;
 import fr.diginamic.springdemo.entities.dtos.CityDTO;
+import fr.diginamic.springdemo.repositories.CityRepository;
 import fr.diginamic.springdemo.services.CityService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
@@ -19,9 +22,18 @@ public class CityController {
     @Autowired
     private CityService cityService;
 
+    @Autowired
+    private CityRepository cityRepository;
+
     @GetMapping
     public Set<CityDTO> getCities() {
         return cityService.extractCities();
+    }
+
+    @GetMapping("/pagination")
+    public Page<CityDTO> getCitiesPagination(@RequestParam int page, @RequestParam int size) {
+        PageRequest pagination = PageRequest.of(page, size);
+        return cityRepository.findAll(pagination).map(CityDTO::new);
     }
 
     @GetMapping("/{id}")
