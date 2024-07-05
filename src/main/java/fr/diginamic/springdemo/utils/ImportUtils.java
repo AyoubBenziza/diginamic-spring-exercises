@@ -17,15 +17,30 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * Utility class for importing data from files
+ */
 @Component
 public class ImportUtils {
 
+    /**
+     * The CityService
+     */
     @Autowired
     private CityService cityService;
 
+    /**
+     * The DepartmentService
+     */
     @Autowired
     private DepartmentService departmentService;
 
+    /**
+     * Import the most populated cities from a CSV file
+     * @param path the path to the CSV file
+     * @param headers the headers of the CSV file
+     * @param limit the maximum number of cities to import
+     */
     public void mostPopulatedCitiesCSV(String path, String[] headers, int limit) {
         System.out.println("Importing cities from " + path);
         try {
