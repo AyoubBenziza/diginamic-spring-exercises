@@ -18,6 +18,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * A controller for the City entity
@@ -58,7 +59,7 @@ public class CityController {
     public Set<CityDTO> getCities() {
         return cityRepository.findAll().stream()
                 .map(CityMapper::convertToDTO)
-                .collect(java.util.stream.Collectors.toSet());
+                .collect(Collectors.toSet());
     }
 
     /**
@@ -101,7 +102,7 @@ public class CityController {
     public Set<CityDTO> getCitiesByNameStartingWith(@RequestParam String name) {
         return cityRepository.findByNameStartingWith(name).stream()
                 .map(CityMapper::convertToDTO)
-                .collect(java.util.stream.Collectors.toSet());
+                .collect(Collectors.toSet());
     }
 
     /**
@@ -113,7 +114,7 @@ public class CityController {
     public Set<CityDTO> getCitiesByPopulationGreaterThan(@RequestParam @Min(0) int population) {
         return cityRepository.findByPopulationIsGreaterThan(population).stream()
                 .map(CityMapper::convertToDTO)
-                .collect(java.util.stream.Collectors.toSet());
+                .collect(Collectors.toSet());
     }
 
     /**
@@ -126,7 +127,7 @@ public class CityController {
     public Set<CityDTO> getCitiesByPopulationRange(@RequestParam int min, @RequestParam int max) {
         return cityRepository.findByPopulationBetween(min, max).stream()
                 .map(CityMapper::convertToDTO)
-                .collect(java.util.stream.Collectors.toSet());
+                .collect(Collectors.toSet());
     }
 
     /**

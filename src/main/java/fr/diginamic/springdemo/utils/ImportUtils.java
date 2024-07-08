@@ -3,7 +3,7 @@ package fr.diginamic.springdemo.utils;
 import fr.diginamic.springdemo.entities.City;
 import fr.diginamic.springdemo.entities.Department;
 import fr.diginamic.springdemo.repositories.CityRepository;
-import fr.diginamic.springdemo.services.DepartmentService;
+import fr.diginamic.springdemo.repositories.DepartmentRepository;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,16 +24,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ImportUtils {
 
     /**
-     * The DepartmentService
-     */
-    @Autowired
-    private DepartmentService departmentService;
-
-    /**
      * The CityRepository
      */
     @Autowired
     private CityRepository cityRepository;
+    @Autowired
+    private DepartmentRepository departmentRepository;
 
     /**
      * Import the most populated cities from a CSV file
@@ -76,11 +72,11 @@ public class ImportUtils {
 
             cities.forEach(city -> {
                 String departmentCode = city.getDepartment().getCode();
-                Department department = departmentService.getDepartment(departmentCode);
+                Department department = departmentRepository.findByCode(departmentCode);
                 if (department == null) {
                     department = new Department();
                     department.setCode(departmentCode);
-                    departmentService.insertDepartments(department);
+                    departmentRepository.save(department);
                 }
 
                 city.setDepartment(department);

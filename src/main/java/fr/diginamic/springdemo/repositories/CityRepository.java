@@ -1,6 +1,8 @@
 package fr.diginamic.springdemo.repositories;
 
 import fr.diginamic.springdemo.entities.City;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -39,4 +41,28 @@ public interface CityRepository extends JpaRepository<City, Integer> {
      * @return the cities
      */
     Set<City> findByPopulationBetween(int min, int max);
+
+    /**
+     * Find cities in a department
+     * @param departmentCode the code of the department
+     * @return the cities
+     */
+    Set<City> findCitiesByDepartment_Code(String departmentCode);
+
+    /**
+     * Find cities in a department by their population
+     * @param departmentCode the code of the department
+     * @param minPopulation the minimum population
+     * @param maxPopulation the maximum population
+     * @return the cities
+     */
+    Set<City> findCitiesByPopulationBetweenAndDepartment_Code(int minPopulation, int maxPopulation, String departmentCode);
+
+    /**
+     * Find the top N cities in a department by their population
+     * @param departmentCode the code of the department
+     * @param pageable the pagination information
+     * @return the cities
+     */
+    Page<City> findAllByDepartment_CodeOrderByPopulationDesc(String departmentCode, Pageable pageable);
 }

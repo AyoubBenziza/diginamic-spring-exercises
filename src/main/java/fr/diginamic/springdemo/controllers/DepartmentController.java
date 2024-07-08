@@ -4,21 +4,28 @@ import fr.diginamic.springdemo.entities.City;
 import fr.diginamic.springdemo.entities.Department;
 import fr.diginamic.springdemo.entities.dtos.CityDTO;
 import fr.diginamic.springdemo.entities.dtos.DepartmentDTO;
+import fr.diginamic.springdemo.mappers.DepartmentMapper;
+import fr.diginamic.springdemo.repositories.CityRepository;
+import fr.diginamic.springdemo.repositories.DepartmentRepository;
 import fr.diginamic.springdemo.services.DepartmentService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+
+import fr.diginamic.springdemo.mappers.CityMapper;
 
 /**
  * A controller for the Department entity
  * @see Department
  * @see DepartmentDTO
  * @see DepartmentService
- * @see fr.diginamic.springdemo.entities.dtos.DepartmentDTO
  *
  * @author AyoubBenziza
  */
@@ -34,12 +41,24 @@ public class DepartmentController {
     private DepartmentService departmentService;
 
     /**
+     * The CityRepository instance
+     * @see CityRepository
+     */
+    @Autowired
+    private CityRepository cityRepository;
+
+    @Autowired
+    private DepartmentRepository departmentRepository;
+
+    /**
      * Get all departments
      * @return a set of DepartmentDTO
      */
     @GetMapping
     public Set<DepartmentDTO> getDepartments() {
-        return departmentService.extractDepartments();
+        return departmentRepository.findAll().stream()
+                .map(DepartmentMapper::convertToDTO)
+                .collect(Collectors.toSet());
     }
 
     /**
@@ -49,7 +68,7 @@ public class DepartmentController {
      */
     @GetMapping("/{code}")
     public DepartmentDTO getDepartment(@PathVariable String code) {
-        return departmentService.extractDepartment(code);
+        return DepartmentMapper.convertToDTO(departmentRepository.findByCode(code));
     }
 
     /**
@@ -59,7 +78,7 @@ public class DepartmentController {
      */
     @GetMapping("/name")
     public DepartmentDTO getDepartmentByName(@RequestParam String name) {
-        return departmentService.extractDepartmentByName(name);
+        return DepartmentMapper.convertToDTO(departmentRepository.findByName(name));
     }
 
     /**
@@ -69,7 +88,9 @@ public class DepartmentController {
      */
     @GetMapping("/searchByName")
     public Set<DepartmentDTO> getDepartmentsByName(@RequestParam String name) {
-        return departmentService.extractDepartmentsByName(name);
+        return departmentRepository.findByNameStartingWith(name).stream()
+                .map(DepartmentMapper::convertToDTO)
+                .collect(Collectors.toSet());
     }
 
     /**
@@ -79,18 +100,20 @@ public class DepartmentController {
      */
     @GetMapping("/{code}/cities")
     public Set<CityDTO> getCitiesInDepartment(@PathVariable String code) {
-        return departmentService.extractCities(code);
+        return cityRepository.findCitiesByDepartment_Code(code).stream()
+                .map(CityMapper::convertToDTO)
+                .collect(Collectors.toSet());
     }
 
     /**
      * Get the most populated cities in a department
      * @param code the department code
      * @param nbCities the number of cities to return
-     * @return a set of CityDTO
+     * @return a list of CityDTO
      */
     @GetMapping("/{code}/cities/mostPopulated")
-    public Set<CityDTO> getTopNCitiesInDepartment(@PathVariable String code,@RequestParam int nbCities) {
-        return departmentService.findTopNCitiesInDepartment(code, nbCities);
+    public List<CityDTO> getTopNCitiesInDepartment(@PathVariable String code, @RequestParam int nbCities) {
+        return cityRepository.findAllByDepartment_CodeOrderByPopulationDesc(code, PageRequest.of(0, nbCities)).map(CityMapper::convertToDTO).getContent();
     }
 
     /**
@@ -102,7 +125,9 @@ public class DepartmentController {
      */
     @GetMapping("/{code}/cities/searchPopulationBetween")
     public Set<CityDTO> getCitiesInDepartmentWithPopulationBetween(@PathVariable String code, @RequestParam int min, @RequestParam int max) {
-        return departmentService.findCitiesWithPopulationBetween(code, min, max);
+        return cityRepository.findCitiesByPopulationBetweenAndDepartment_Code(min, max, code).stream()
+                .map(CityMapper::convertToDTO)
+                .collect(Collectors.toSet());
     }
 
     /**
@@ -112,12 +137,13 @@ public class DepartmentController {
      * @return a set of CityDTO
      */
     @PostMapping
-    public ResponseEntity<String> addDepartment(@Valid @RequestBody Department department, BindingResult result){
+    public ResponseEntity<?> addDepartment(@Valid @RequestBody Department department, BindingResult result){
         if (result.hasErrors()) {
             return ResponseEntity.badRequest().body("Invalid department data");
         }
-        departmentService.insertDepartments(department);
-        return ResponseEntity.ok("Department added");
+        Department savedDepartment = departmentRepository.save(department);
+        DepartmentDTO savedDepartmentDTO = DepartmentMapper.convertToDTO(savedDepartment);
+        return ResponseEntity.ok(savedDepartmentDTO);
     }
 
     /**
@@ -127,8 +153,17 @@ public class DepartmentController {
      * @return a DepartmentDTO
      */
     @PostMapping("/{code}/cities")
-    public DepartmentDTO addCitiesToDepartment(@PathVariable String code,@Valid @RequestBody Set<City> cities) {
-        return departmentService.addCities(code, cities);
+    public ResponseEntity<?> addCitiesToDepartment(@PathVariable String code, @Valid @RequestBody Set<City> cities, BindingResult result) {
+        if (result.hasErrors()) {
+            return ResponseEntity.badRequest().body("Invalid city data");
+        }
+        Department department = departmentRepository.findByCode(code);
+        if (department == null) {
+            return ResponseEntity.badRequest().body("Department not found");
+        }
+        cities.forEach(city -> city.setDepartment(department));
+        cityRepository.saveAll(cities);
+        return ResponseEntity.ok(DepartmentMapper.convertToDTO(department));
     }
 
     /**
@@ -137,8 +172,15 @@ public class DepartmentController {
      * @param department the department to update
      */
     @PutMapping("/{code}")
-    public void updateDepartment(@PathVariable String code, @RequestBody Department department) {
+    public ResponseEntity<?> updateDepartment(@PathVariable String code, @Valid @RequestBody Department department, BindingResult result) {
+        if (result.hasErrors()) {
+            return ResponseEntity.badRequest().body("Invalid department data");
+        }
+        if (departmentRepository.existsByCode(code)) {
+            return ResponseEntity.notFound().build();
+        }
         departmentService.update(code, department);
+        return ResponseEntity.ok().build();
     }
 
     /**
@@ -146,8 +188,12 @@ public class DepartmentController {
      * @param code the department code
      */
     @DeleteMapping("/{code}")
-    public void deleteDepartment(@PathVariable String code) {
-        departmentService.delete(code);
+    public ResponseEntity<?> deleteDepartment(@PathVariable String code) {
+        if (departmentRepository.existsByCode(code)) {
+            return ResponseEntity.notFound().build();
+        }
+        departmentRepository.deleteByCode(code);
+        return ResponseEntity.ok().build();
     }
 
 }
