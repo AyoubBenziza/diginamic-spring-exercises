@@ -176,7 +176,7 @@ public class DepartmentController {
         if (result.hasErrors()) {
             return ResponseEntity.badRequest().body("Invalid department data");
         }
-        if (departmentRepository.existsByCode(code)) {
+        if (!departmentRepository.existsByCode(code)) {
             return ResponseEntity.notFound().build();
         }
         departmentService.update(code, department);
