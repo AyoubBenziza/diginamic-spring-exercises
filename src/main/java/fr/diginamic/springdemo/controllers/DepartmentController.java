@@ -189,7 +189,7 @@ public class DepartmentController {
      */
     @DeleteMapping("/{code}")
     public ResponseEntity<?> deleteDepartment(@PathVariable String code) {
-        if (departmentRepository.existsByCode(code)) {
+        if (!departmentRepository.existsByCode(code)) {
             return ResponseEntity.notFound().build();
         }
         departmentRepository.deleteByCode(code);
