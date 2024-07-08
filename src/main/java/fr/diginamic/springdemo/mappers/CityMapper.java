@@ -16,7 +16,8 @@ public class CityMapper {
      */
     public static CityDTO convertToDTO(City city) {
         if (city != null) {
-            return new CityDTO(city.getName(), city.getPopulation(), city.getDepartment().getCode());
+            String departmentCode = city.getDepartment() != null ? city.getDepartment().getCode() : "N/A";
+            return new CityDTO(city.getName(), city.getPopulation(), departmentCode);
         }
         return null;
     }

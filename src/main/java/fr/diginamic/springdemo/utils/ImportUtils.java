@@ -2,7 +2,7 @@ package fr.diginamic.springdemo.utils;
 
 import fr.diginamic.springdemo.entities.City;
 import fr.diginamic.springdemo.entities.Department;
-import fr.diginamic.springdemo.services.CityService;
+import fr.diginamic.springdemo.repositories.CityRepository;
 import fr.diginamic.springdemo.services.DepartmentService;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
@@ -24,16 +24,16 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ImportUtils {
 
     /**
-     * The CityService
-     */
-    @Autowired
-    private CityService cityService;
-
-    /**
      * The DepartmentService
      */
     @Autowired
     private DepartmentService departmentService;
+
+    /**
+     * The CityRepository
+     */
+    @Autowired
+    private CityRepository cityRepository;
 
     /**
      * Import the most populated cities from a CSV file
@@ -84,7 +84,7 @@ public class ImportUtils {
                 }
 
                 city.setDepartment(department);
-                cityService.insertCities(city);
+                cityRepository.save(city);
             });
         } catch (IOException e) {
             throw new RuntimeException("Error while importing cities from CSV", e);
