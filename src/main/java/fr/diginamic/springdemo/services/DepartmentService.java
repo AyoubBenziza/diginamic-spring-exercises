@@ -70,7 +70,7 @@ public class DepartmentService {
 
             if (apiDepartmentDTOList != null && !apiDepartmentDTOList.isEmpty()) {
                 ApiDepartmentDTO apiDepartmentDTO = apiDepartmentDTOList.getFirst(); // Assuming the first item is the desired one
-                departmentToUpdate.setName(apiDepartmentDTO.getNom());
+                departmentToUpdate.setName(apiDepartmentDTO.nom());
             }
         }
     }
