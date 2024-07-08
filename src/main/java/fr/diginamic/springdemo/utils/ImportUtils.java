@@ -4,6 +4,7 @@ import fr.diginamic.springdemo.entities.City;
 import fr.diginamic.springdemo.entities.Department;
 import fr.diginamic.springdemo.repositories.CityRepository;
 import fr.diginamic.springdemo.repositories.DepartmentRepository;
+import fr.diginamic.springdemo.services.DepartmentService;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +35,8 @@ public class ImportUtils {
      */
     @Autowired
     private DepartmentRepository departmentRepository;
+    @Autowired
+    private DepartmentService departmentService;
 
     /**
      * Import the most populated cities from a CSV file
@@ -80,6 +83,7 @@ public class ImportUtils {
                 if (department == null) {
                     department = new Department();
                     department.setCode(departmentCode);
+                    departmentService.addName(department);
                     departmentRepository.save(department);
                 }
 

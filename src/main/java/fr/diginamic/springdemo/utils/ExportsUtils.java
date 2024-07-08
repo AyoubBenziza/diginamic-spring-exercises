@@ -8,13 +8,20 @@ import java.io.IOException;
 import java.util.Set;
 
 /**
- * Utility class to export data to CSV file
+ * Utility class to export data to files
  * @see CSVPrinter
  * @see CSVFormat
  * @see HttpServletResponse
  * @author AyoubBenziza
  */
 public class ExportsUtils {
+    /**
+     * Export a set of data to a CSV file
+     * @param data the data to export
+     * @param filename the name of the file
+     * @param headers the headers of the CSV file
+     * @param response the HttpServletResponse
+     */
     public static void toCSVFile(Set<?> data, String filename, String[] headers, HttpServletResponse response) {
         response.setContentType("text/csv");
         response.setHeader("Content-Disposition", "attachment; filename=" + filename);

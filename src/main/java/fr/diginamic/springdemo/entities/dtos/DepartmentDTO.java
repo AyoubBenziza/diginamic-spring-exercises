@@ -10,6 +10,10 @@ import java.util.Set;
  * @author AyoubBenziza
  */
 public class DepartmentDTO {
+    /**
+     * The department name
+     */
+    private String name;
 
     /**
      * The department population
@@ -27,6 +31,22 @@ public class DepartmentDTO {
      */
     public DepartmentDTO(int population) {
         this.population = population;
+    }
+
+    /**
+     * Get the department name
+     * @return a string
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * Set the department name
+     * @param name the department name
+     */
+    public void setName(String name) {
+        this.name = name;
     }
 
     /**
