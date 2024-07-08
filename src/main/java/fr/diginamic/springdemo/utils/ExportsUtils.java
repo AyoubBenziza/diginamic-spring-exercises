@@ -7,6 +7,13 @@ import org.apache.commons.csv.CSVPrinter;
 import java.io.IOException;
 import java.util.Set;
 
+/**
+ * Utility class to export data to CSV file
+ * @see CSVPrinter
+ * @see CSVFormat
+ * @see HttpServletResponse
+ * @author AyoubBenziza
+ */
 public class ExportsUtils {
     public static void toCSVFile(Set<?> data, String filename, String[] headers, HttpServletResponse response) {
         response.setContentType("text/csv");

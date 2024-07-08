@@ -28,6 +28,10 @@ public class ImportUtils {
      */
     @Autowired
     private CityRepository cityRepository;
+
+    /**
+     * The DepartmentRepository
+     */
     @Autowired
     private DepartmentRepository departmentRepository;
 
