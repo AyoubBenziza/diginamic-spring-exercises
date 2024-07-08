@@ -4,11 +4,10 @@ import fr.diginamic.springdemo.entities.City;
 import fr.diginamic.springdemo.entities.dtos.CityDTO;
 import fr.diginamic.springdemo.repositories.CityRepository;
 import fr.diginamic.springdemo.services.CityService;
+import fr.diginamic.springdemo.utils.ExportsUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVPrinter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -16,8 +15,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.Set;
 
 /**
@@ -142,22 +139,9 @@ public class CityController {
     /**
      * Export cities to a CSV file
      * @param response the HTTP response
-     * @throws IOException if an I/O error occurs
      */
     @GetMapping("/export")
-    public void exportCities(HttpServletResponse response) throws IOException {
-        response.setContentType("text/csv");
-        response.setHeader("Content-Disposition", "attachment; filename=\"cities.csv\"");
-
-        Set<CityDTO> cities = cityService.extractCities();
-        PrintWriter writer = response.getWriter();
-        CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.withHeader("Name", "Population", "CodeDepartment"));
-
-        for (CityDTO city : cities) {
-            csvPrinter.printRecord(city.getName(), city.getPopulation(), city.getDepartmentCode());
-        }
-
-        csvPrinter.flush();
-        csvPrinter.close();
+    public void exportCities(HttpServletResponse response) {
+        ExportsUtils.toCSVFile(cityService.extractCities(), "cities", new String[]{"name", "population", "departmentCode"}, response);
     }
 }
