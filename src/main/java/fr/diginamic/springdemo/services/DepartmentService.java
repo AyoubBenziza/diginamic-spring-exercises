@@ -8,10 +8,13 @@ import fr.diginamic.springdemo.repositories.CityRepository;
 import fr.diginamic.springdemo.repositories.DepartmentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Limit;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -125,14 +128,15 @@ public class DepartmentService {
      * Get the top N cities in a department
      * @param code the code of the department
      * @param nbCities the number of cities to get
-     * @return a set of cities
+     * @return a list of cities
      * @throws NotFoundException if no cities are found
      * @see City
      * @see CityRepository
      * @see Limit
      */
-    public Set<City> getTopNCities(String code, int nbCities) throws NotFoundException {
-        Set<City> cities = cityRepository.findTopNCitiesByDepartment_CodeOrderByPopulationDesc(code, Limit.of(nbCities));
+    public List<City> getTopNCities(String code, int nbCities) throws NotFoundException {
+        Page<City> citiesPage = cityRepository.findAllByDepartment_CodeOrderByPopulationDesc(code, PageRequest.of(0, nbCities));
+        List<City> cities = (citiesPage.getContent());
         if (cities.isEmpty()) {
             throw new NotFoundException("No cities found in department with code " + code);
         }
@@ -213,7 +217,12 @@ public class DepartmentService {
         }
     }
 
-    // Method to create a new Department entity, incorporating addName
+    /**
+     * Create a department
+     * @param department the department
+     * @return the department
+     * @throws NotFoundException if the department is not found
+     */
     public Department create(Department department) throws NotFoundException {
         addName(department, department.getCode()); // Set the department name using the addName method
         departmentRepository.save(department); // Save the department to the database

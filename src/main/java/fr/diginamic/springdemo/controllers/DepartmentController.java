@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -146,7 +147,7 @@ public class DepartmentController {
      */
     @GetMapping("/{code}/cities/mostPopulated")
     public ResponseEntity<Set<CityDTO>> getTopNCitiesInDepartment(@PathVariable String code, @RequestParam int nbCities) throws NotFoundException {
-        Set<City> cities = departmentService.getTopNCities(code, nbCities);
+        List<City> cities = departmentService.getTopNCities(code, nbCities);
         Set<CityDTO> cityDTOS = cities.stream()
                 .map(CityMapper::convertToDTO)
                 .collect(Collectors.toSet());
