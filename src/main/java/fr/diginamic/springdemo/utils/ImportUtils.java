@@ -2,6 +2,7 @@ package fr.diginamic.springdemo.utils;
 
 import fr.diginamic.springdemo.entities.City;
 import fr.diginamic.springdemo.entities.Department;
+import fr.diginamic.springdemo.exceptions.NotFoundException;
 import fr.diginamic.springdemo.repositories.CityRepository;
 import fr.diginamic.springdemo.repositories.DepartmentRepository;
 import fr.diginamic.springdemo.services.DepartmentService;
@@ -68,7 +69,7 @@ public class ImportUtils {
                     city.setName(cityName);
                     city.setPopulation(population);
                     // Temporarily store the department code in the city object for later processing
-                    city.setDepartment(new Department(departmentCode)); // Assuming Department has a constructor that accepts a code
+                    city.setDepartment(new Department(departmentCode));
 
                     cities.add(city);
                 }
@@ -81,10 +82,11 @@ public class ImportUtils {
                 String departmentCode = city.getDepartment().getCode();
                 Department department = departmentRepository.findByCode(departmentCode);
                 if (department == null) {
-                    department = new Department();
-                    department.setCode(departmentCode);
-                    departmentService.addName(department);
-                    departmentRepository.save(department);
+                    try {
+                        department = departmentService.create(new Department(departmentCode));
+                    } catch (NotFoundException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
 
                 city.setDepartment(department);

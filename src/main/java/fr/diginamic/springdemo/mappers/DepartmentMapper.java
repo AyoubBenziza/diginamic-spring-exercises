@@ -21,6 +21,7 @@ public class DepartmentMapper {
     public static DepartmentDTO convertToDTO(Department department) {
         if (department != null) {
             DepartmentDTO departmentDTO = new DepartmentDTO(department.getPopulation());
+            departmentDTO.setName(department.getName());
             Set<CityDTO> cityDTOs = department.getCities().stream()
                     .map(city -> new CityDTO(city.getName(), city.getPopulation(), city.getDepartment().getCode()))
                     .collect(Collectors.toSet());

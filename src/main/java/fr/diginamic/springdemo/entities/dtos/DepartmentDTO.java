@@ -1,5 +1,9 @@
 package fr.diginamic.springdemo.entities.dtos;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+
 import java.util.Set;
 
 /**
@@ -9,6 +13,7 @@ import java.util.Set;
  * @see fr.diginamic.springdemo.entities.dtos.CityDTO
  * @author AyoubBenziza
  */
+@JsonPropertyOrder({"name", "population", "cities"})
 public class DepartmentDTO {
     /**
      * The department name
@@ -34,9 +39,16 @@ public class DepartmentDTO {
     }
 
     /**
+     * Default constructor
+     */
+    public DepartmentDTO() {
+    }
+
+    /**
      * Get the department name
      * @return a string
      */
+    @JsonProperty("name")
     public String getName() {
         return name;
     }
@@ -45,6 +57,7 @@ public class DepartmentDTO {
      * Set the department name
      * @param name the department name
      */
+    @JsonAlias("nom")
     public void setName(String name) {
         this.name = name;
     }
