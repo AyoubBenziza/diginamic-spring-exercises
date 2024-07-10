@@ -8,6 +8,11 @@ import fr.diginamic.springdemo.mappers.CityMapper;
 import fr.diginamic.springdemo.repositories.CityRepository;
 import fr.diginamic.springdemo.services.CityService;
 import fr.diginamic.springdemo.utils.ExportsUtils;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -16,6 +21,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
@@ -54,11 +62,32 @@ public class CityController {
     @Autowired
     private CityRepository cityRepository;
 
+    @Autowired
+    private PagedResourcesAssembler<CityDTO> cityDTOPagedResourcesAssembler;
+
     /**
      * Get all cities
      * @return a set of CityDTO
      * @throws NotFoundException if no cities are found
      */
+    @Operation(summary = "Get all cities")
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "List of cities in format JSON",
+                            content = {@Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = CityDTO.class)
+                            )}
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "No cities found",
+                            content = @Content
+                    )
+            }
+    )
     @GetMapping
     public ResponseEntity<Set<CityDTO>> getCities() throws NotFoundException {
         Set<CityDTO> cities = cityService.getCities().stream()
@@ -69,15 +98,29 @@ public class CityController {
 
     /**
      * Get cities with pagination
+     *
      * @param page the page number
      * @param size the page size
      * @return a page of CityDTO
      * @see Page
      * @see Pageable
      */
+    @Operation(summary = "Get cities with pagination")
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Page of cities in format JSON",
+                            content = {@Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = CityDTO.class)
+                            )}
+                    )
+            }
+    )
     @GetMapping("/pagination")
-    public Page<CityDTO> getCitiesWithPagination(@RequestParam @Min(0) int page, @RequestParam int size) {
-        return cityRepository.findAll(PageRequest.of(page, size)).map(CityMapper::convertToDTO);
+    public PagedModel<EntityModel<CityDTO>> getCitiesWithPagination(@RequestParam @Min(0) int page, @RequestParam int size) {
+        return cityDTOPagedResourcesAssembler.toModel(cityRepository.findAll(PageRequest.of(page, size)).map(CityMapper::convertToDTO));
     }
 
     /**
@@ -86,6 +129,24 @@ public class CityController {
      * @return a response entity
      * @throws NotFoundException if the city is not found
      */
+    @Operation(summary = "Get a city by its id")
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "City in format JSON",
+                            content = {@Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = CityDTO.class)
+                            )}
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "City not found",
+                            content = @Content
+                    )
+            }
+    )
     @GetMapping("/{id}")
     public ResponseEntity<CityDTO> getCity(@PathVariable int id) throws NotFoundException {
         City city = cityService.getCity(id);
@@ -99,6 +160,24 @@ public class CityController {
      * @return a city DTO
      * @throws NotFoundException if the city is not found
      */
+    @Operation(summary = "Get a city by its name")
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "City in format JSON",
+                            content = {@Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = CityDTO.class)
+                            )}
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "City not found",
+                            content = @Content
+                    )
+            }
+    )
     @GetMapping("/search/name")
     public ResponseEntity<CityDTO> getCityByName(@RequestParam @Size(min = 1) String name) throws NotFoundException {
         City city = cityService.getCityByName(name);
@@ -112,6 +191,24 @@ public class CityController {
      * @return a set of CityDTO
      * @throws NotFoundException if no cities are found
      */
+    @Operation(summary = "Get cities by their name starting with a given value")
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "List of cities starting with the given value in format JSON",
+                            content = {@Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = CityDTO.class)
+                            )}
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "No cities found",
+                            content = @Content
+                    )
+            }
+    )
     @GetMapping("/search/name/start")
     public ResponseEntity<Set<CityDTO>> getCitiesByNameStartingWith(@RequestParam String name) throws NotFoundException {
         Set<City> cities = cityService.getCitiesByNameStartingWith(name);
@@ -127,6 +224,24 @@ public class CityController {
      * @return a set of CityDTO
      * @throws NotFoundException if no cities are found
      */
+    @Operation(summary = "Get cities with a population greater than a given value")
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "List of cities with a population greater than the given value in format JSON",
+                            content = {@Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = CityDTO.class)
+                            )}
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "No cities found",
+                            content = @Content
+                    )
+            }
+    )
     @GetMapping("/search/population/greater")
     public ResponseEntity<Set<CityDTO>> getCitiesByPopulationGreaterThan(@RequestParam @Min(0) int population) throws NotFoundException {
         Set<City> cities = cityService.getCitiesByPopulationGreaterThan(population);
@@ -143,6 +258,24 @@ public class CityController {
      * @return a set of CityDTO
      * @throws NotFoundException if no cities are found
      */
+    @Operation(summary = "Get cities with a population range")
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "List of cities with a population range in format JSON",
+                            content = {@Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = CityDTO.class)
+                            )}
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "No cities found",
+                            content = @Content
+                    )
+            }
+    )
     @GetMapping("/search/population/range")
     public ResponseEntity<Set<CityDTO>> getCitiesByPopulationRange(@RequestParam int min, @RequestParam int max) throws NotFoundException {
         Set<City> cities = cityService.getCitiesByPopulationRange(min, max);
@@ -158,6 +291,24 @@ public class CityController {
      * @param result the binding result
      * @return a response entity
      */
+    @Operation(summary = "Add a city")
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "City added in format JSON",
+                            content = {@Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = CityDTO.class)
+                            )}
+                    ),
+                    @ApiResponse(
+                            responseCode = "400",
+                            description = "Invalid data",
+                            content = @Content
+                    )
+            }
+    )
     @PostMapping
     public ResponseEntity<CityDTO> addCity(@Valid @RequestBody City city, BindingResult result) throws InvalidException {
         if (result.hasErrors()) {
@@ -175,6 +326,29 @@ public class CityController {
      * @param result the binding result
      * @return a response entity
      */
+    @Operation(summary = "Update a city")
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "City updated in format JSON",
+                            content = {@Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = CityDTO.class)
+                            )}
+                    ),
+                    @ApiResponse(
+                            responseCode = "400",
+                            description = "Invalid data",
+                            content = @Content
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "City not found",
+                            content = @Content
+                    )
+            }
+    )
     @PutMapping("/{id}")
     public ResponseEntity<CityDTO> updateCity(@PathVariable @Min(0) int id, @Valid @RequestBody City city, BindingResult result) throws InvalidException, NotFoundException {
         if (result.hasErrors()) {
@@ -190,6 +364,21 @@ public class CityController {
      * @param id the city id
      * @return a response entity
      */
+    @Operation(summary = "Delete a city by its id")
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "City deleted",
+                            content = @Content
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "City not found",
+                            content = @Content
+                    )
+            }
+    )
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteCity(@PathVariable int id) throws NotFoundException {
         cityService.delete(id);
@@ -202,6 +391,21 @@ public class CityController {
      * @see ExportsUtils
      * @see HttpServletResponse
      */
+    @Operation(summary = "Export cities to a CSV file")
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Cities exported to a CSV file",
+                            content = @Content
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "No cities found",
+                            content = @Content
+                    )
+            }
+    )
     @GetMapping("/export")
     public void exportCities(HttpServletResponse response) throws NotFoundException {
         ExportsUtils.toCSVFile(cityService.getCities(), "cities", new String[]{"name", "population", "departmentCode"}, response);
