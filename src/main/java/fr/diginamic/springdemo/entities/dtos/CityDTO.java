@@ -68,4 +68,13 @@ public class CityDTO {
     public String getDepartmentCode() {
         return departmentCode;
     }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "name='" + name + '\'' +
+                ", population=" + population +
+                ", departmentCode='" + departmentCode + '\'' +
+                '}';
+    }
 }

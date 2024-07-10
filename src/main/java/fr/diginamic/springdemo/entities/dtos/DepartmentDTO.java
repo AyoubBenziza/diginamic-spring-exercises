@@ -93,4 +93,13 @@ public class DepartmentDTO {
     public void setCities(Set<CityDTO> cities) {
         this.cities = cities;
     }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "name='" + name + '\'' +
+                ", population=" + population +
+                ", cities=" + cities +
+                '}';
+    }
 }

@@ -10,11 +10,13 @@ import fr.diginamic.springdemo.mappers.CityMapper;
 import fr.diginamic.springdemo.mappers.DepartmentMapper;
 import fr.diginamic.springdemo.repositories.DepartmentRepository;
 import fr.diginamic.springdemo.services.DepartmentService;
+import fr.diginamic.springdemo.utils.ExportsUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -473,4 +475,17 @@ public class DepartmentController {
         return ResponseEntity.ok("Department deleted");
     }
 
+    @GetMapping("/export/pdf")
+    public void exportToPDF(HttpServletResponse response) throws NotFoundException {
+        Set<DepartmentDTO> departments = departmentService.getDepartments().stream()
+                .map(DepartmentMapper::convertToDTO)
+                .collect(Collectors.toSet());
+        ExportsUtils.toPDFFile(departments, "departments.pdf", new String[]{"name","population","cities"}, response);
+    }
+
+    @GetMapping("{code}/export/pdf")
+    public void exportOneToPDF(@PathVariable String code, HttpServletResponse response) throws NotFoundException {
+        DepartmentDTO department = DepartmentMapper.convertToDTO(departmentService.getDepartment(code));
+        ExportsUtils.toPDFFile(Set.of(department), "department.pdf", new String[]{"name","population","cities"}, response);
+    }
 }
