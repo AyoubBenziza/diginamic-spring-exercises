@@ -3,6 +3,8 @@ package fr.diginamic.springdemo.entities.dtos;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import fr.diginamic.springdemo.annotations.PDFList;
+import fr.diginamic.springdemo.annotations.PDFValue;
 
 import java.util.Set;
 
@@ -18,16 +20,19 @@ public class DepartmentDTO {
     /**
      * The department name
      */
+    @PDFValue(name = "Name", order = 1)
     private String name;
 
     /**
      * The department population
      */
+    @PDFValue(name = "Population", order = 2)
     private int population;
 
     /**
      * The department cities
      */
+    @PDFList(name = "Cities", headers = {"Name", "Population"})
     private Set<CityDTO> cities;
 
     /**

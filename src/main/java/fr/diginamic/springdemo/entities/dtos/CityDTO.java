@@ -1,5 +1,6 @@
 package fr.diginamic.springdemo.entities.dtos;
 
+import fr.diginamic.springdemo.annotations.PDFValue;
 import fr.diginamic.springdemo.entities.City;
 
 /**
@@ -11,11 +12,13 @@ public class CityDTO {
     /**
      * The city name
      */
+    @PDFValue(name = "Name", order = 1)
     private final String name;
 
     /**
      * The city population
      */
+    @PDFValue(name = "Population", order = 2)
     private final int population;
 
     /**

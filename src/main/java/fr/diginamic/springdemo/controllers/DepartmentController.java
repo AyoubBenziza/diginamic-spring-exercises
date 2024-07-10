@@ -1,5 +1,6 @@
 package fr.diginamic.springdemo.controllers;
 
+import com.itextpdf.text.DocumentException;
 import fr.diginamic.springdemo.entities.City;
 import fr.diginamic.springdemo.entities.Department;
 import fr.diginamic.springdemo.entities.dtos.CityDTO;
@@ -29,6 +30,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -476,16 +478,16 @@ public class DepartmentController {
     }
 
     @GetMapping("/export/pdf")
-    public void exportToPDF(HttpServletResponse response) throws NotFoundException {
+    public void exportToPDF(HttpServletResponse response) throws NotFoundException, DocumentException, IOException, IllegalAccessException {
         Set<DepartmentDTO> departments = departmentService.getDepartments().stream()
                 .map(DepartmentMapper::convertToDTO)
                 .collect(Collectors.toSet());
-        ExportsUtils.toPDFFile(departments, "departments.pdf", new String[]{"name","population","cities"}, response);
+        ExportsUtils.toPDFFile(departments, "departments", response);
     }
 
     @GetMapping("{code}/export/pdf")
-    public void exportOneToPDF(@PathVariable String code, HttpServletResponse response) throws NotFoundException {
+    public void exportOneToPDF(@PathVariable String code, HttpServletResponse response) throws NotFoundException, DocumentException, IOException, IllegalAccessException {
         DepartmentDTO department = DepartmentMapper.convertToDTO(departmentService.getDepartment(code));
-        ExportsUtils.toPDFFile(Set.of(department), "department.pdf", new String[]{"name","population","cities"}, response);
+        ExportsUtils.toPDFFile(Set.of(department), "department", response);
     }
 }

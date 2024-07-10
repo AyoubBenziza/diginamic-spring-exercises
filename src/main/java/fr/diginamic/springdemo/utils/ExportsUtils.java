@@ -4,13 +4,16 @@ import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
+import fr.diginamic.springdemo.annotations.PDFList;
+import fr.diginamic.springdemo.annotations.PDFValue;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 
 import java.io.IOException;
-import java.util.Set;
-import java.util.stream.Stream;
+import java.lang.reflect.Field;
+import java.util.*;
+import java.util.List;
 
 /**
  * Utility class to export data to files
@@ -29,7 +32,7 @@ public class ExportsUtils {
      */
     public static void toCSVFile(Set<?> data, String filename, String[] headers, HttpServletResponse response) {
         response.setContentType("text/csv");
-        response.setHeader("Content-Disposition", "attachment; filename=" + filename);
+        response.setHeader("Content-Disposition", "attachment; filename=" + filename + ".csv");
 
         CSVFormat csvFormat = CSVFormat.EXCEL.builder().setHeader(headers).build();
 
@@ -46,81 +49,91 @@ public class ExportsUtils {
         }
     }
 
-    public static void toPDFFile(Set<?> data, String filename, String[] headers, HttpServletResponse response) {
+    public static void toPDFFile(Set<?> data, String filename, HttpServletResponse response) throws DocumentException, IOException, IllegalAccessException {
+        if (data.isEmpty()) return;
+
         response.setContentType("application/pdf");
-        response.setHeader("Content-Disposition", "attachment; filename=" + filename);
+        response.setHeader("Content-Disposition", "attachment; filename=" + filename + ".pdf");
 
         Document document = new Document(PageSize.A4);
-        try {
-            PdfWriter.getInstance(document, response.getOutputStream());
-            document.open();
+        PdfWriter.getInstance(document, response.getOutputStream());
+        document.open();
 
-            PdfPTable table = new PdfPTable(headers.length);
-            Stream.of(headers).forEach(h -> {
-                PdfPCell header = new PdfPCell();
-                header.setBackgroundColor(BaseColor.LIGHT_GRAY);
-                header.setBorderWidth(1);
-                header.setPhrase(new Phrase(h));
-                table.addCell(header);
-            });
+        // Assuming all objects in the set are of the same type, so we take the first one to prepare headers
+        Object firstObj = data.iterator().next();
+        List<String> headers = getStrings(firstObj);
 
-            data.forEach(d -> {
-                String objectString = d.toString();
-                // Extracting the content inside the curly braces
-                String propertiesString = objectString.substring(objectString.indexOf('{') + 1, objectString.lastIndexOf('}'));
-
-                // Handling the cities property separately
-                String citiesString = propertiesString.substring(propertiesString.indexOf("cities="));
-                propertiesString = propertiesString.substring(0, propertiesString.indexOf(", cities="));
-
-                // Splitting the remaining properties by comma
-                String[] properties = propertiesString.split(", ");
-                for (String property : properties) {
-                    // Extracting the value after the '=' character
-                    String value = property.substring(property.indexOf('=') + 1).trim().replace("'", ""); // Removing single quotes around the name value
-                    table.addCell(value);
-                }
-
-                // Handling the cities property, assuming it's a collection
-                if (citiesString.contains("cities=")) {
-                    PdfPTable cityTable = new PdfPTable(3); // Adjust the number of columns to match CityDTO properties
-                    // Adding headers to the city table
-                    Stream.of("Name", "Population", "Department Code").forEach(headerTitle -> {
-                        PdfPCell header = new PdfPCell();
-                        header.setBackgroundColor(BaseColor.LIGHT_GRAY);
-                        header.setBorderWidth(1);
-                        header.setPhrase(new Phrase(headerTitle));
-                        cityTable.addCell(header);
-                    });
-                    String citiesValue = citiesString.substring(citiesString.indexOf('=') + 1).trim();
-                    citiesValue = citiesValue.substring(1, citiesValue.length() - 1); // Removing the leading and trailing brackets
-                    // Splitting based on the start of each city's toString representation, considering the format
-                    String[] cityValues = citiesValue.split(", (?=\\{name=)");
-
-                    for (String city : cityValues) {
-                        // Check if the city string ends with '}' and remove it
-                        if (city.endsWith("}")) {
-                            city = city.substring(0, city.length() - 1);
-                        }
-                        // Splitting the city's properties by comma
-                        String[] cityProps = city.split(", ");
-                        for (String prop : cityProps) {
-                            // Extracting the value after the '=' character and removing single quotes
-                            String cityPropValue = prop.substring(prop.indexOf('=') + 1).trim().replace("'", "");
-                            cityTable.addCell(cityPropValue);
-                        }
-                    }
-                    // Assuming you want to add the cityTable as a single cell to the main table
-                    PdfPCell cityCell = new PdfPCell(cityTable);
-                    table.addCell(cityCell);
-                }
-            });
-
-            document.add(table);
-        } catch (DocumentException | IOException e) {
-            System.err.println("Error while writing data to PDF file: " + e.getMessage());
-        } finally {
-            document.close();
+        PdfPTable mainTable = new PdfPTable(headers.size());
+        // Add headers to the table
+        for (String header : headers) {
+            PdfPCell headerCell = new PdfPCell();
+            headerCell.setBackgroundColor(BaseColor.LIGHT_GRAY);
+            headerCell.setBorderWidth(1);
+            headerCell.setPhrase(new Phrase(header));
+            mainTable.addCell(headerCell);
         }
+
+        // Process each object in the data set
+        for (Object obj : data) {
+            processFieldForTable(obj, mainTable); // This method needs to be adjusted to not add headers again
+        }
+
+        document.add(mainTable);
+        document.close();
+    }
+
+    private static void processFieldForTable(Object obj, PdfPTable table) throws IllegalAccessException, DocumentException {
+        Class<?> clazz = obj.getClass();
+        Field[] fields = clazz.getDeclaredFields();
+
+        for (Field field : fields) {
+            field.setAccessible(true);
+            if (field.isAnnotationPresent(PDFValue.class)) {
+                // Handle primitive fields and strings
+                String value = field.get(obj).toString();
+                table.addCell(new PdfPCell(new Phrase(value)));
+            } else if (field.isAnnotationPresent(PDFList.class)) {
+                // Handle collections
+                Object listValue = field.get(obj);
+                if (listValue instanceof Collection<?> collection) {
+                    if (!collection.isEmpty()) {
+                        Object firstItem = collection.iterator().next();
+                        List<String> headers = getStrings(firstItem); // Reuse getStrings to prepare headers for subtable
+                        PdfPTable subTable = new PdfPTable(headers.size());
+                        // Add headers to the subtable
+                        headers.forEach(header -> {
+                            PdfPCell headerCell = new PdfPCell(new Phrase(header));
+                            headerCell.setBackgroundColor(BaseColor.LIGHT_GRAY);
+                            headerCell.setBorderWidth(1);
+                            subTable.addCell(headerCell);
+                        });
+                        // Add values to the subtable
+                        for (Object item : collection) {
+                            processFieldForTable(item, subTable); // Recursive call
+                        }
+                        PdfPCell cell = new PdfPCell(subTable);
+                        cell.setColspan(headers.size()); // Span across the number of headers
+                        table.addCell(cell);
+                    }
+                }
+            }
+        }
+    }
+
+
+    private static List<String> getStrings(Object firstObj) {
+        Class<?> clazz = firstObj.getClass();
+        Field[] fields = clazz.getDeclaredFields();
+
+        // Prepare headers
+        List<String> headers = new ArrayList<>();
+        for (Field field : fields) {
+            if (field.isAnnotationPresent(PDFValue.class)) {
+                headers.add(field.getAnnotation(PDFValue.class).name());
+            } else if (field.isAnnotationPresent(PDFList.class)) {
+                headers.add(field.getAnnotation(PDFList.class).name());
+            }
+        }
+        return headers;
     }
 }
