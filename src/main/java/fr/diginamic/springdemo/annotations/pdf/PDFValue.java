@@ -1,4 +1,4 @@
-package fr.diginamic.springdemo.annotations;
+package fr.diginamic.springdemo.annotations.pdf;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
-public @interface PDFList {
+public @interface PDFValue {
     String name();
-    String[] headers();
+    int order();
 }

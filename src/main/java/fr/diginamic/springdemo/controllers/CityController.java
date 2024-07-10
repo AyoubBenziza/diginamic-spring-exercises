@@ -1,5 +1,6 @@
 package fr.diginamic.springdemo.controllers;
 
+import com.itextpdf.text.DocumentException;
 import fr.diginamic.springdemo.entities.City;
 import fr.diginamic.springdemo.entities.dtos.CityDTO;
 import fr.diginamic.springdemo.exceptions.InvalidException;
@@ -28,6 +29,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -406,8 +408,105 @@ public class CityController {
                     )
             }
     )
-    @GetMapping("/export")
-    public void exportCities(HttpServletResponse response) throws NotFoundException {
-        ExportsUtils.toCSVFile(cityService.getCities(), "cities", new String[]{"name", "population", "departmentCode"}, response);
+    @GetMapping("/export/csv")
+    public void exportCities(HttpServletResponse response) throws NotFoundException, IOException, IllegalAccessException {
+        Set<CityDTO> cities = cityService.getCities().stream()
+                .map(CityMapper::convertToDTO)
+                .collect(Collectors.toSet());
+        ExportsUtils.toCSVFile(cities, "cities", response);
+    }
+
+    /**
+     * Export a city to a CSV file
+     * @param id the city id
+     * @param response the HTTP response
+     * @see ExportsUtils
+     * @see HttpServletResponse
+     * @throws NotFoundException if the city is not found
+     * @throws IOException if an I/O error occurs
+     * @throws IllegalAccessException if an illegal access operation is attempted
+     */
+    @Operation(summary = "Export a city to a CSV file")
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "City exported to a CSV file",
+                            content = @Content
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "City not found",
+                            content = @Content
+                    )
+            }
+    )
+    @GetMapping("/{id}/export/csv")
+    public void exportCity(@PathVariable int id, HttpServletResponse response) throws NotFoundException, IOException, IllegalAccessException {
+        City city = cityService.getCity(id);
+        Set<CityDTO> cities = Set.of(CityMapper.convertToDTO(city));
+        ExportsUtils.toCSVFile(cities, "city", response);
+    }
+
+    /**
+     * Export cities to a PDF file
+     * @param response the HTTP response
+     * @throws NotFoundException if no cities are found
+     * @throws IOException if an I/O error occurs
+     * @throws IllegalAccessException if an illegal access operation is attempted
+     * @throws DocumentException if an error occurs during the document processing
+     */
+    @Operation(summary = "Export cities to a PDF file")
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Cities exported to a PDF file",
+                            content = @Content
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "No cities found",
+                            content = @Content
+                    )
+            }
+    )
+    @GetMapping("/export/pdf")
+    public void exportCitiesToPDF(HttpServletResponse response) throws NotFoundException, IOException, IllegalAccessException, DocumentException {
+        Set<CityDTO> cities = cityService.getCities().stream()
+                .map(CityMapper::convertToDTO)
+                .collect(Collectors.toSet());
+        ExportsUtils.toPDFFile(cities, "cities", response);
+    }
+
+    /**
+     * Export a city to a PDF file
+     * @param id the city id
+     * @param response the HTTP response
+     * @throws NotFoundException if the city is not found
+     * @throws IOException if an I/O error occurs
+     * @throws IllegalAccessException if an illegal access operation is attempted
+     * @throws DocumentException if an error occurs during the document processing
+     */
+    @Operation(summary = "Export a city to a PDF file")
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "City exported to a PDF file",
+                            content = @Content
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "City not found",
+                            content = @Content
+                    )
+            }
+    )
+    @GetMapping("/{id}/export/pdf")
+    public void exportCityToPDF(@PathVariable int id, HttpServletResponse response) throws NotFoundException, IOException, IllegalAccessException, DocumentException {
+        City city = cityService.getCity(id);
+        Set<CityDTO> cities = Set.of(CityMapper.convertToDTO(city));
+        ExportsUtils.toPDFFile(cities, "city", response);
     }
 }

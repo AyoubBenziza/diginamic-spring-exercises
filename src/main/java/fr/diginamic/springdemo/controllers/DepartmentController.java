@@ -477,6 +477,29 @@ public class DepartmentController {
         return ResponseEntity.ok("Department deleted");
     }
 
+    /**
+     * Export all departments to a PDF file
+     * @param response the HttpServletResponse
+     * @throws NotFoundException if no departments are found
+     * @throws DocumentException if an error occurs during the document creation
+     * @throws IOException if an I/O error occurs
+     * @throws IllegalAccessException if an illegal access operation is attempted
+     */
+    @Operation(summary = "Export all departments to a PDF file")
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "PDF file of all departments",
+                            content = @Content
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "No departments found",
+                            content = @Content
+                    )
+            }
+    )
     @GetMapping("/export/pdf")
     public void exportToPDF(HttpServletResponse response) throws NotFoundException, DocumentException, IOException, IllegalAccessException {
         Set<DepartmentDTO> departments = departmentService.getDepartments().stream()
@@ -485,9 +508,92 @@ public class DepartmentController {
         ExportsUtils.toPDFFile(departments, "departments", response);
     }
 
+    /**
+     * Export a department to a PDF file
+     * @param code the department code
+     * @param response the HttpServletResponse
+     * @throws NotFoundException if the department is not found
+     * @throws DocumentException if an error occurs during the document creation
+     * @throws IOException if an I/O error occurs
+     * @throws IllegalAccessException if an illegal access operation is attempted
+     */
+    @Operation(summary = "Export a department to a PDF file")
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "PDF file of the department",
+                            content = @Content
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "Department not found",
+                            content = @Content
+                    )
+            }
+    )
     @GetMapping("{code}/export/pdf")
     public void exportOneToPDF(@PathVariable String code, HttpServletResponse response) throws NotFoundException, DocumentException, IOException, IllegalAccessException {
         DepartmentDTO department = DepartmentMapper.convertToDTO(departmentService.getDepartment(code));
         ExportsUtils.toPDFFile(Set.of(department), "department", response);
+    }
+
+    /**
+     * Export all departments to a CSV file
+     * @param response the HttpServletResponse
+     * @throws NotFoundException if no departments are found
+     * @throws IOException if an I/O error occurs
+     * @throws IllegalAccessException if an illegal access operation is attempted
+     */
+    @Operation(summary = "Export all departments to a CSV file")
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "CSV file of all departments",
+                            content = @Content
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "No departments found",
+                            content = @Content
+                    )
+            }
+    )
+    @GetMapping("/export/csv")
+    public void exportToCSV(HttpServletResponse response) throws NotFoundException, IOException, IllegalAccessException {
+        Set<DepartmentDTO> departments = departmentService.getDepartments().stream()
+                .map(DepartmentMapper::convertToDTO)
+                .collect(Collectors.toSet());
+        ExportsUtils.toCSVFile(departments, "departments", response);
+    }
+
+    /**
+     * Export a department to a CSV file
+     * @param code the department code
+     * @param response the HttpServletResponse
+     * @throws NotFoundException if the department is not found
+     * @throws IOException if an I/O error occurs
+     * @throws IllegalAccessException if an illegal access operation is attempted
+     */
+    @Operation(summary = "Export a department to a CSV file")
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "CSV file of the department",
+                            content = @Content
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "Department not found",
+                            content = @Content
+                    )
+            }
+    )
+    @GetMapping("{code}/export/csv")
+    public void exportOneToCSV(@PathVariable String code, HttpServletResponse response) throws NotFoundException, IOException, IllegalAccessException {
+        DepartmentDTO department = DepartmentMapper.convertToDTO(departmentService.getDepartment(code));
+        ExportsUtils.toCSVFile(Set.of(department), "department", response);
     }
 }

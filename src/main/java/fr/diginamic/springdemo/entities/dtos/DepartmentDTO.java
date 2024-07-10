@@ -3,8 +3,9 @@ package fr.diginamic.springdemo.entities.dtos;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import fr.diginamic.springdemo.annotations.PDFList;
-import fr.diginamic.springdemo.annotations.PDFValue;
+import fr.diginamic.springdemo.annotations.csv.CSVField;
+import fr.diginamic.springdemo.annotations.pdf.PDFList;
+import fr.diginamic.springdemo.annotations.pdf.PDFValue;
 
 import java.util.Set;
 
@@ -20,12 +21,14 @@ public class DepartmentDTO {
     /**
      * The department name
      */
+    @CSVField(name = "Name", order = 1)
     @PDFValue(name = "Name", order = 1)
     private String name;
 
     /**
      * The department population
      */
+    @CSVField(name = "Population", order = 2)
     @PDFValue(name = "Population", order = 2)
     private int population;
 

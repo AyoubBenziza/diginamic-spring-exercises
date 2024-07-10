@@ -1,6 +1,7 @@
 package fr.diginamic.springdemo.entities.dtos;
 
-import fr.diginamic.springdemo.annotations.PDFValue;
+import fr.diginamic.springdemo.annotations.csv.CSVField;
+import fr.diginamic.springdemo.annotations.pdf.PDFValue;
 import fr.diginamic.springdemo.entities.City;
 
 /**
@@ -12,18 +13,21 @@ public class CityDTO {
     /**
      * The city name
      */
+    @CSVField(name = "Name", order = 1)
     @PDFValue(name = "Name", order = 1)
     private final String name;
 
     /**
      * The city population
      */
+    @CSVField(name = "Population", order = 2)
     @PDFValue(name = "Population", order = 2)
     private final int population;
 
     /**
      * The city department code
      */
+    @CSVField(name = "Department Code", order = 3)
     private final String departmentCode;
 
     /**

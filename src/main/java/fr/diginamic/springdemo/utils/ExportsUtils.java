@@ -4,8 +4,9 @@ import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
-import fr.diginamic.springdemo.annotations.PDFList;
-import fr.diginamic.springdemo.annotations.PDFValue;
+import fr.diginamic.springdemo.annotations.csv.CSVField;
+import fr.diginamic.springdemo.annotations.pdf.PDFList;
+import fr.diginamic.springdemo.annotations.pdf.PDFValue;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
@@ -27,25 +28,38 @@ public class ExportsUtils {
      * Export a set of data to a CSV file
      * @param data the data to export
      * @param filename the name of the file
-     * @param headers the headers of the CSV file
      * @param response the HttpServletResponse
      */
-    public static void toCSVFile(Set<?> data, String filename, String[] headers, HttpServletResponse response) {
+    public static void toCSVFile(Set<?> data, String filename, HttpServletResponse response) throws IOException, IllegalAccessException {
+        if (data.isEmpty()) return;
+
         response.setContentType("text/csv");
         response.setHeader("Content-Disposition", "attachment; filename=" + filename + ".csv");
 
-        CSVFormat csvFormat = CSVFormat.EXCEL.builder().setHeader(headers).build();
+        // Assuming all objects in the set are of the same type
+        Object firstObj = data.iterator().next();
+        List<String> headers = new ArrayList<>();
+        List<Field> annotatedFields = new ArrayList<>();
+
+        // Collect headers and annotated fields
+        for (Field field : firstObj.getClass().getDeclaredFields()) {
+            if (field.isAnnotationPresent(CSVField.class)) {
+                headers.add(field.getAnnotation(CSVField.class).name());
+                annotatedFields.add(field);
+            }
+        }
+
+        CSVFormat csvFormat = CSVFormat.EXCEL.builder().setHeader(headers.toArray(new String[0])).build();
 
         try (CSVPrinter printer = new CSVPrinter(response.getWriter(), csvFormat)) {
-            data.forEach(d -> {
-                try {
-                    printer.printRecord(d);
-                } catch (IOException e) {
-                    System.err.println("Error while writing data to CSV file: "+ e.getMessage());
+            for (Object obj : data) {
+                List<Object> values = new ArrayList<>();
+                for (Field field : annotatedFields) {
+                    field.setAccessible(true);
+                    values.add(field.get(obj));
                 }
-            });
-        } catch (IOException e) {
-            System.err.println("Error while writing data to CSV file: "+ e.getMessage());
+                printer.printRecord(values);
+            }
         }
     }
 
@@ -55,20 +69,22 @@ public class ExportsUtils {
         response.setContentType("application/pdf");
         response.setHeader("Content-Disposition", "attachment; filename=" + filename + ".pdf");
 
-        Document document = new Document(PageSize.A4);
+        Document document = new Document(PageSize.A4, 36, 36, 36, 36); // Reduced margins
         PdfWriter.getInstance(document, response.getOutputStream());
         document.open();
 
-        // Assuming all objects in the set are of the same type, so we take the first one to prepare headers
         Object firstObj = data.iterator().next();
         List<String> headers = getStrings(firstObj);
 
         PdfPTable mainTable = new PdfPTable(headers.size());
+        mainTable.setWidthPercentage(100); // Use full page width
+
         // Add headers to the table
         for (String header : headers) {
             PdfPCell headerCell = new PdfPCell();
             headerCell.setBackgroundColor(BaseColor.LIGHT_GRAY);
             headerCell.setBorderWidth(1);
+            headerCell.setPadding(4);
             headerCell.setPhrase(new Phrase(header));
             mainTable.addCell(headerCell);
         }
@@ -82,7 +98,7 @@ public class ExportsUtils {
         document.close();
     }
 
-    private static void processFieldForTable(Object obj, PdfPTable table) throws IllegalAccessException, DocumentException {
+    private static void processFieldForTable(Object obj, PdfPTable table) throws IllegalAccessException {
         Class<?> clazz = obj.getClass();
         Field[] fields = clazz.getDeclaredFields();
 
