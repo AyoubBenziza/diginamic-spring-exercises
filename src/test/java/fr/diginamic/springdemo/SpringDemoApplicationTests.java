@@ -14,7 +14,7 @@ import org.springframework.web.context.WebApplicationContext;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
 
 @ExtendWith({RestDocumentationExtension.class, SpringExtension.class})
-@SpringBootTest
+@SpringBootTest(classes = SpringDemoApplication.class)
 class SpringDemoApplicationTests {
 
     MockMvc mockMvc;
